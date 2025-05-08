@@ -17,7 +17,15 @@ resource "aws_security_group" "my_sg" {
         to_port = 80
         from_port = 80
         protocol = "tcp"
-        cidr_blocks = [ "0.0.0.0/0" ]
+        cidr_blocks = var.cidr_blocks
+    }
+
+     ingress {
+        description = "this is port 80"
+        to_port = 22
+        from_port = 22
+        protocol = "tcp"
+        cidr_blocks = var.cidr_blocks
     }
 
     ingress {
@@ -25,7 +33,7 @@ resource "aws_security_group" "my_sg" {
         to_port = 8080
         from_port = 8080
         protocol = "tcp"
-        cidr_blocks = [ "0.0.0.0/0" ]
+        cidr_blocks = var.cidr_blocks
     }
 
     egress {
@@ -33,20 +41,23 @@ resource "aws_security_group" "my_sg" {
         to_port = 0
         from_port = 0
         protocol = -1
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = var.cidr_blocks
     }
 }
 
 resource "aws_instance" "my_instance" {
-        instance_type = "t2.micro"
+        for_each = local.instance
+        instance_type = var.instance_type
         security_groups = [ aws_security_group.my_sg.name ]
         key_name = aws_key_pair.my_key.key_name
-        ami = " "
+        ami = var.ami_id
 
         root_block_device {
-          volume_size = 10
-          volume_type = "gp3"
+          volume_size = var.volume_size
+          volume_type = var.instance_type
         }
 
-        tags = "junoon-server"
+        tags = {
+            name = each.value
+        }
 }
